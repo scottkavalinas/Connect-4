@@ -16,16 +16,16 @@ YELLOW = (255,255,0)
 ROW_COUNT = 6
 COLUMN_COUNT = 7
 
-PLAYER = 0
-AI = 1
+ABPLAYER = 0
+MCTSAI = 1
 
 EMPTY = 0
-PLAYER_PEICE = 1
-AI_PEICE = 2
+ABPLAYER_PEICE = 1
+MCTSAI_PEICE = 2
 
 WINDOW_LENGTH = 4
 
-SIMULATIONS = 100
+SIMULATIONS = 200
 
 def create_board():
     board = np.zeros((6,7))
@@ -51,25 +51,21 @@ def print_board(board):
 
 def winning_move(board,piece):
     #NOTE: functions are naive (can be revamped)
-
     # Check horizontal locations for win
     for c in range(COLUMN_COUNT-3):
         for r in range(ROW_COUNT):
             if board[r][c] == piece and board[r][c+1] == piece and board[r][c+2] == piece and board[r][c+3] == piece:
                 return True
-    
     # Check vertical location for win
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT-3):
             if board[r][c] == piece and board[r+1][c] == piece and board[r+2][c] == piece and board[r+3][c] == piece:
                 return True
-    
     # Check for positively sloped diagonals
     for c in range(COLUMN_COUNT-3):
         for r in range(ROW_COUNT-3):
             if board[r][c] == piece and board[r+1][c+1] == piece and board[r+2][c+2] == piece and board[r+3][c+3] == piece:
                 return True
-    
     # Check for negatively sloped diagonals
     for c in range(COLUMN_COUNT-3):
         for r in range(3, ROW_COUNT):
@@ -78,9 +74,9 @@ def winning_move(board,piece):
 
 def evaluate_window(window, peice):
     score = 0
-    opp_peice = PLAYER_PEICE
-    if peice == PLAYER_PEICE:
-        opp_peice = AI
+    opp_peice = ABPLAYER_PEICE
+    if peice == ABPLAYER_PEICE:
+        opp_peice = MCTSAI
 
     if window.count(peice) == 4:
         score += 100
@@ -102,88 +98,43 @@ def score_position(board, piece):
     center_array = [int(i) for i in list(board[:, COLUMN_COUNT//2])]
     center_count = center_array.count(piece)
     score += center_count*6
-
     # Score horizontal
     for r in range(ROW_COUNT):
         row_array = [int(i) for i in list(board[r,:])]
         for c in range(COLUMN_COUNT-3):
             window = row_array[c: c+WINDOW_LENGTH]
             score += evaluate_window(window,piece)
-   
     # Score vertical
     for c in range(COLUMN_COUNT):
         col_array = [int(i) for i in list(board[:,c])]
         for r in range(ROW_COUNT-3):
             window = col_array[r:r+WINDOW_LENGTH]
             score += evaluate_window(window,piece)
-    
     # Score positive-sloped diagonal
     for r in range(ROW_COUNT-3):
         for c in range(COLUMN_COUNT-3):
             window = [board[r+i][c+i] for i in range(WINDOW_LENGTH)]
-            score += evaluate_window(window,piece)
-    
+            score += evaluate_window(window,piece)  
     # Score negatively-sloped diagonal
     for r in range(ROW_COUNT-3):
         for c in range(COLUMN_COUNT-3):
             window = [board[r+3-i][c+i] for i in range(WINDOW_LENGTH)]
             score += evaluate_window(window,piece)
-    
     return score
 
 def is_terminal_node(board):
-    return winning_move(board, PLAYER_PEICE) or winning_move(board, AI_PEICE) or len(get_valid_locations(board)) == 0
+    return winning_move(board, ABPLAYER_PEICE) or winning_move(board, MCTSAI_PEICE) or len(get_valid_locations(board)) == 0
 
 def game_result(board):
     if is_terminal_node(board):
-        if winning_move(board, AI_PEICE):
-            return AI_PEICE
-        elif winning_move(board, PLAYER_PEICE):
-            return PLAYER_PEICE
+        if winning_move(board, MCTSAI_PEICE):
+            return MCTSAI_PEICE
+        elif winning_move(board, ABPLAYER_PEICE):
+            return ABPLAYER_PEICE
         else:
             return EMPTY
     return None
 
-def minimax(board, depth, maxi_player):
-    valid_locations = get_valid_locations(board)
-    is_terminal = is_terminal_node(board)
-    if depth == 0 or is_terminal:
-        if is_terminal:
-            #edge case 1: AI is in winning move
-            if winning_move(board, AI_PEICE):
-                return (None, 10000000000000000000000)
-            #edge case 2: Player is in winning move
-            elif winning_move(board, PLAYER_PEICE):
-                return (None, -10000000000000000000000)
-            #if no moves left (game over)
-            else:
-                return (None, 0)
-        else: # Depth is zero
-            return (None, score_position(board, AI_PEICE))
-    if maxi_player: #maximizing player (AI)
-        value = - math.inf
-        column = random.choice(valid_locations)
-        for col in valid_locations:
-            row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, AI_PEICE)
-            new_score = minimax(b_copy, depth-1, False)[1]
-            if new_score > value:
-                value = new_score
-                column = col
-        return column, value
-    else: #minimizing player (PLAYER)
-        value = math.inf
-        column = random.choice(valid_locations)
-        for col in valid_locations:
-            row = get_next_open_row(board, col)
-            b_copy = board.copy()
-            drop_piece(b_copy, row, col, PLAYER_PEICE)
-            new_score = minimax(b_copy, depth-1, True)[1]
-            if new_score < value:
-                value = new_score
-                column = col
-        return column, value
     
 def alphaBeta(board, depth, alpha, beta, maxi_player):
     valid_locations = get_valid_locations(board)
@@ -191,23 +142,23 @@ def alphaBeta(board, depth, alpha, beta, maxi_player):
     if depth == 0 or is_terminal:
         if is_terminal:
             #edge case 1: AI is in winning move
-            if winning_move(board, AI_PEICE):
+            if winning_move(board, MCTSAI_PEICE):
                 return (None, 10000000000000000000000)
             #edge case 2: Player is in winning move
-            elif winning_move(board, PLAYER_PEICE):
+            elif winning_move(board, ABPLAYER_PEICE):
                 return (None, -10000000000000000000000)
             #if no moves left (game over)
             else:
                 return (None, 0)
         else: # Depth is zero
-            return (None, score_position(board, AI_PEICE))
+            return (None, score_position(board, MCTSAI_PEICE))
     if maxi_player: #maximizing player (AI)
         value = - math.inf
         column = random.choice(valid_locations)
         for col in valid_locations:
             row = get_next_open_row(board, col)
             b_copy = board.copy()
-            drop_piece(b_copy, row, col, AI_PEICE)
+            drop_piece(b_copy, row, col, MCTSAI_PEICE)
             new_score = alphaBeta(b_copy, depth-1, alpha, beta, False)[1]
             if new_score > value:
                 value = new_score
@@ -222,7 +173,7 @@ def alphaBeta(board, depth, alpha, beta, maxi_player):
         for col in valid_locations:
             row = get_next_open_row(board, col)
             b_copy = board.copy()
-            drop_piece(b_copy, row, col, PLAYER_PEICE)
+            drop_piece(b_copy, row, col, ABPLAYER_PEICE)
             new_score = alphaBeta(b_copy, depth-1, alpha, beta, True)[1]
             if new_score < value:
                 value = new_score
@@ -234,13 +185,14 @@ def alphaBeta(board, depth, alpha, beta, maxi_player):
 
 
 def monte_carlo_tree_search(board, SIMULATIONS, piece):
+    #run a simulation to find MCTSAI_PLAYER'S best move
     search_board = board.copy()
     valid_moves = get_valid_locations(search_board)
     toplay = turn ##maybe peice instead of player?
-    best_result, best_move = -20.0, None
-    best_move = valid_moves[0]
-    wins = np.zeros(len(valid_moves))
-    visits = np.zeros(len(valid_moves))
+    best_result, best_move = -20.0, None    # 
+    best_move_MC = valid_moves[0]
+    wins_MC = np.zeros(len(valid_moves))
+    visits_MC = np.zeros(len(valid_moves))
     for sim in range(SIMULATIONS):
         for i, col in enumerate(valid_moves):
             row = get_next_open_row(board, col)
@@ -249,22 +201,48 @@ def monte_carlo_tree_search(board, SIMULATIONS, piece):
             if result == piece:
                 #this move results in a win
                 undo(search_board, row, col)
-                # best_result = win_rate
-                # best_move = col
-                # break
                 return col
             sim_result = simulate_play(search_board, piece)
-            wins[i] += sim_result
-            visits[i] += 1.0
-            win_rate = wins[i] / visits[i]
-            # if win_rate < best_result:
-            #     best_result = win_rate
-            #     best_move = col
-            if win_rate > best_result:
-                best_result = win_rate
-                best_move = col
-            
+            wins_MC[i] += sim_result
+            visits_MC[i] += 1.0
+            win_rate_MC = wins_MC[i] / visits_MC[i]
+            if win_rate_MC > best_result:
+                best_result = win_rate_MC
+                best_move_MC = col
             undo(board, row, col)
+    
+    #Simulate Opponent's plays and find best opponent move
+    opponent = ABPLAYER_PEICE
+    search_board = board.copy()
+    valid_moves = get_valid_locations(search_board)
+    toplay = turn ##maybe peice instead of player?
+    best_result, best_move = -20.0, None    # 
+    best_move_Opp = valid_moves[0]
+    wins_Opp = np.zeros(len(valid_moves))
+    visits_Opp = np.zeros(len(valid_moves))
+    for sim in range(SIMULATIONS):
+        for i, col in enumerate(valid_moves):
+            row = get_next_open_row(board, col)
+            drop_piece(search_board, row, col, opponent)
+            result = game_result(search_board)
+            if result == opponent:
+                #this move results in a win
+                undo(search_board, row, col)
+                return col
+            sim_result = simulate_play(search_board, piece)
+            wins_Opp[i] += sim_result
+            visits_Opp[i] += 1.0
+            win_rate_Opp = wins_Opp[i] / visits_Opp[i]
+            if win_rate_Opp > best_result:
+                best_result = win_rate_Opp
+                best_move_Opp = col   
+            undo(board, row, col)
+
+    #if opponents move returns a better score, use the opponents move instead
+    if max(win_rate_Opp,win_rate_MC) == win_rate_Opp:
+        best_move = best_move_Opp
+    else:
+        best_move = best_move_MC
         assert best_move is not None
     return best_move
 
@@ -279,40 +257,20 @@ def simulate_play(board, piece):
             col = random.randint(0, COLUMN_COUNT-1) #random walk peice placement
             if col in valid_moves:
                 break
-        #col = pick_best_move(board, toplay) #score hueristic search
-        #col, minimax_score = minimax(board, 3, True)    #minimax solving algorithm
-        #col, minimax_score = alphaBeta(board,3, -math.inf, math.inf, True)  #alphabeta solver
-        
         row = get_next_open_row(board, col)
         drop_piece(board, row, col, toplay)
         move = [row, col]
         simulation_moves.append(move)
         result = game_result(board)
         #switch turns
-        if toplay == AI_PEICE:
-            toplay = PLAYER_PEICE
+        if toplay == MCTSAI_PEICE:
+            toplay = ABPLAYER_PEICE
         else:
-            toplay = AI_PEICE
+            toplay = MCTSAI_PEICE
     for m in simulation_moves[::-1]:
         undo(board, m[0], m[1])
     res_value = 1.0 if result == piece else 0.0
-    return res_value
-        
-
-
-def pick_best_move(board, piece):
-    best_score = -10000
-    valid_locations = get_valid_locations(board)
-    best_col = random.choice(valid_locations)
-    for col in valid_locations:
-        row = get_next_open_row(board, col)
-        temp_board = board.copy()
-        drop_piece(temp_board, row, col, piece)
-        score = score_position(temp_board, piece)
-        if score > best_score:
-            best_score = score
-            best_col = col
-    return best_col   
+    return res_value      
 
 def get_valid_locations(board):
     valid_locations = []
@@ -321,8 +279,6 @@ def get_valid_locations(board):
             valid_locations.append(col)
     return valid_locations
 
-
-
 def draw_board(board):
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT):
@@ -330,33 +286,49 @@ def draw_board(board):
             pygame.draw.circle(screen, BLACK, (int(c*SQUARESIZE+SQUARESIZE/2), int(r*SQUARESIZE+SQUARESIZE+SQUARESIZE/2)), RADIUS)
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT):
-            if board[r][c] == PLAYER_PEICE:
+            if board[r][c] == ABPLAYER_PEICE:
                 pygame.draw.circle(screen, RED, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
-            elif board[r][c] == AI_PEICE:    
+            elif board[r][c] == MCTSAI_PEICE:    
                 pygame.draw.circle(screen, YELLOW, (int(c*SQUARESIZE+SQUARESIZE/2), height-int(r*SQUARESIZE+SQUARESIZE/2)), RADIUS)
-    
-    
+
             pygame.display.update()
-            
-total_games= 0
-Player1_wins = 0
-Player2_wins = 0            
-while total_games != 10:
+
+
+def endgame_results(total_games, alphaBetawins, MCTSwins):
+    #endgame: clear screen and show wins
+    screen.fill(BLACK)
+    gameTotalLabel = myfont.render("GAMES: "+ str(total_games), 1, BLUE)
+    ABwinsLabel = myfont.render("AB WINS: " +str(alphaBetawins), 1, RED)
+    MCSTSwinsLabel = myfont.render("MCTS WINS: " +str(MCTSwins), 1, YELLOW)
+
+    screen.blit(gameTotalLabel, (40,50))        
+    screen.blit(ABwinsLabel, (40,300))        
+    screen.blit(MCSTSwinsLabel, (40,500)) 
+    pygame.display.update()       
+    pygame.time.wait(3000)
+
+
+#main function
+total_games= 3
+alphaBetawins = 0
+MCTSwins = 0   
+
+SQUARESIZE = 100
+width = COLUMN_COUNT * SQUARESIZE
+height = (ROW_COUNT+1) * SQUARESIZE
+
+size = (width, height)
+
+RADIUS = int(SQUARESIZE/2 -5)         
+for i in range(total_games):
     board = create_board()
     #print_board(board)
     game_over = False
     #turn = 0   #player always goes first
-    turn = random.randint(PLAYER,AI)    #first player alternates
-
+    turn = random.randint(ABPLAYER,MCTSAI)    #first player alternates
+    #turn = 1
     pygame.init()
 
-    SQUARESIZE = 100
-    width = COLUMN_COUNT * SQUARESIZE
-    height = (ROW_COUNT+1) * SQUARESIZE
-
-    size = (width, height)
-
-    RADIUS = int(SQUARESIZE/2 -5)
 
     screen = pygame.display.set_mode(size)
     draw_board(board)
@@ -369,40 +341,22 @@ while total_games != 10:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            
-            #NOTE: color updates on mouse motion - wont update if mouse is static
-            if event.type == pygame.MOUSEMOTION:
-                pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-                posx = event.pos[0]
-                if turn == 0:
-                    pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
-                else:
-                    pygame.draw.circle(screen, YELLOW, (posx, int(SQUARESIZE/2)), RADIUS)
-            pygame.display.update()
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                #print_board(event.pos)
-                pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
                             
         # #Ask for player 1 input
-        if turn == PLAYER:
-            #note: add error check for 0-6
-            #posx = event.pos[0]
-            #col = int(math.floor(posx/SQUARESIZE))
+        if turn == ABPLAYER:
+            #RED player is set to use alphaBeta
             col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
-            
-            #col = int(input("Player 1 Make Your Selection (0-6): "))
             if is_valid_location(board,col):
                 row = get_next_open_row(board, col)
-                drop_piece(board, row, col, PLAYER_PEICE)
-
-                if winning_move(board, PLAYER_PEICE):
+                drop_piece(board, row, col, ABPLAYER_PEICE)
+                #if AlphaBeta wins: gameover
+                if winning_move(board, ABPLAYER_PEICE):
                     #print("\nPlayer 1 Wins!!\n Here is the final board:\n ")
                     label = myfont.render("ALPHABETA WINS!!!", 1, RED)
                     screen.blit(label, (40,10))
+                    alphaBetawins += 1
                     game_over = True
 
-                #print_board(board)
                 draw_board(board)
                 
                 turn += 1
@@ -410,34 +364,32 @@ while total_games != 10:
 
 
         # #Ask for Player 2 input
-        if turn == AI and not game_over:
-            #pygame.time.wait(500)
-            #col = random.randint(0, COLUMN_COUNT-1) #random walk peice placement
-            #col = pick_best_move(board, AI_PEICE) #score hueristic search
-            #col, minimax_score = minimax(board, 4, True)    #minimax solving algorithm
-            #col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
-            col = monte_carlo_tree_search(board, SIMULATIONS, AI_PEICE)
+        if turn == MCTSAI and not game_over:
+            #YELLOW player is set to use MCTS
+            col = monte_carlo_tree_search(board, SIMULATIONS, MCTSAI_PEICE)
             if is_valid_location(board,col):
                 row = get_next_open_row(board, col)
-                drop_piece(board, row, col, AI_PEICE)
-
-                if winning_move(board, AI_PEICE):
-                    #print("\nPlayer 2 Wi2ns!!\n Here is the final board:\n ")
+                drop_piece(board, row, col, MCTSAI_PEICE)
+                #if MCTS wins: gameover
+                if winning_move(board, MCTSAI_PEICE):
                     label = myfont.render("MONTE CARLO ts WINS!!!", 1, YELLOW)
                     screen.blit(label, (40,10))
+                    MCTSwins += 1
                     game_over = True
 
-
-                #print_board(board)
                 draw_board(board)
                 
                 turn += 1
                 turn = turn % 2 #turn will alternate between 0 and 1
-
+        
+        #if there are no valid locations left: gameover (draw)
         if get_valid_locations(board) == None:
             label = myfont.render("DRAW MATCH.", 1, BLUE)
-            screen.blit(label, (40,10))
-                    
+            screen.blit(label, (40,10))     
             game_over = True
+        #if game over then wait 3sec before next game starts
         if game_over:
             pygame.time.wait(3000)
+
+#displaying the results at endgame
+endgame_results(total_games, alphaBetawins, MCTSwins)
