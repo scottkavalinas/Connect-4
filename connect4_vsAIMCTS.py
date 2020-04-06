@@ -381,27 +381,29 @@ while not game_over:
             #print_board(event.pos)
             pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
                         
-            # #Ask for player 1 input
-            if turn == PLAYER:
-                #note: add error check for 0-6
-                posx = event.pos[0]
-                col = int(math.floor(posx/SQUARESIZE))
-                #col = int(input("Player 1 Make Your Selection (0-6): "))
-                if is_valid_location(board,col):
-                    row = get_next_open_row(board, col)
-                    drop_piece(board, row, col, PLAYER_PEICE)
+    # #Ask for player 1 input
+    if turn == PLAYER:
+        #note: add error check for 0-6
+        #posx = event.pos[0]
+        #col = int(math.floor(posx/SQUARESIZE))
+        col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
+        
+        #col = int(input("Player 1 Make Your Selection (0-6): "))
+        if is_valid_location(board,col):
+            row = get_next_open_row(board, col)
+            drop_piece(board, row, col, PLAYER_PEICE)
 
-                    if winning_move(board, PLAYER_PEICE):
-                        #print("\nPlayer 1 Wins!!\n Here is the final board:\n ")
-                        label = myfont.render("Player 1 WINS!!!", 1, RED)
-                        screen.blit(label, (40,10))
-                        game_over = True
+            if winning_move(board, PLAYER_PEICE):
+                #print("\nPlayer 1 Wins!!\n Here is the final board:\n ")
+                label = myfont.render("Player 1 WINS!!!", 1, RED)
+                screen.blit(label, (40,10))
+                game_over = True
 
-                    #print_board(board)
-                    draw_board(board)
-                    
-                    turn += 1
-                    turn = turn % 2 #turn will alternate between 0 and 1
+            #print_board(board)
+            draw_board(board)
+            
+            turn += 1
+            turn = turn % 2 #turn will alternate between 0 and 1
 
 
     # #Ask for Player 2 input

@@ -263,7 +263,7 @@ def draw_board(board):
 total_games= 0
 Player1_wins = 0
 Player2_wins = 0            
-while total_games != 100:
+while total_games != 10:
     board = create_board()
     #print_board(board)
     game_over = False
@@ -301,7 +301,7 @@ while total_games != 100:
         if turn == AI_1 and not game_over:
             pygame.time.wait(0)
             
-            col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
+            col, minimax_score = alphaBeta(board, 2, -math.inf, math.inf, True)  #alphabeta solver
             if is_valid_location(board,col):
                 row = get_next_open_row(board, col)
                 drop_piece(board, row, col, AI_1_PEICE)
@@ -327,7 +327,7 @@ while total_games != 100:
             #col = random.randint(0, COLUMN_COUNT-1) #random walk peice placement
             #col = pick_best_move(board, AI_2_PEICE) #score hueristic search
             #col, minimax_score = minimax(board, 4, True)    #minimax solving algorithm
-            col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
+            col, minimax_score = alphaBeta(board, 2, -math.inf, math.inf, True)  #alphabeta solver
             if is_valid_location(board,col):
                 row = get_next_open_row(board, col)
                 drop_piece(board, row, col, AI_2_PEICE)
