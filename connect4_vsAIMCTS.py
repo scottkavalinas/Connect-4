@@ -338,103 +338,106 @@ def draw_board(board):
     
             pygame.display.update()
             
+total_games= 0
+Player1_wins = 0
+Player2_wins = 0            
+while total_games != 10:
+    board = create_board()
+    #print_board(board)
+    game_over = False
+    #turn = 0   #player always goes first
+    turn = random.randint(PLAYER,AI)    #first player alternates
 
-board = create_board()
-#print_board(board)
-game_over = False
-#turn = 0   #player always goes first
-turn = random.randint(PLAYER,AI)    #first player alternates
+    pygame.init()
 
-pygame.init()
+    SQUARESIZE = 100
+    width = COLUMN_COUNT * SQUARESIZE
+    height = (ROW_COUNT+1) * SQUARESIZE
 
-SQUARESIZE = 100
-width = COLUMN_COUNT * SQUARESIZE
-height = (ROW_COUNT+1) * SQUARESIZE
+    size = (width, height)
 
-size = (width, height)
+    RADIUS = int(SQUARESIZE/2 -5)
 
-RADIUS = int(SQUARESIZE/2 -5)
+    screen = pygame.display.set_mode(size)
+    draw_board(board)
+    pygame.display.update()
 
-screen = pygame.display.set_mode(size)
-draw_board(board)
-pygame.display.update()
+    myfont = pygame.font.SysFont("monospace", 75)
 
-myfont = pygame.font.SysFont("monospace", 75)
+    while not game_over:
 
-while not game_over:
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
-        
-        #NOTE: color updates on mouse motion - wont update if mouse is static
-        if event.type == pygame.MOUSEMOTION:
-            pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-            posx = event.pos[0]
-            if turn == 0:
-                pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
-            else:
-                pygame.draw.circle(screen, YELLOW, (posx, int(SQUARESIZE/2)), RADIUS)
-        pygame.display.update()
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            #print_board(event.pos)
-            pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
-                        
-    # #Ask for player 1 input
-    if turn == PLAYER:
-        #note: add error check for 0-6
-        #posx = event.pos[0]
-        #col = int(math.floor(posx/SQUARESIZE))
-        col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
-        
-        #col = int(input("Player 1 Make Your Selection (0-6): "))
-        if is_valid_location(board,col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, PLAYER_PEICE)
-
-            if winning_move(board, PLAYER_PEICE):
-                #print("\nPlayer 1 Wins!!\n Here is the final board:\n ")
-                label = myfont.render("Player 1 WINS!!!", 1, RED)
-                screen.blit(label, (40,10))
-                game_over = True
-
-            #print_board(board)
-            draw_board(board)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
             
-            turn += 1
-            turn = turn % 2 #turn will alternate between 0 and 1
+            #NOTE: color updates on mouse motion - wont update if mouse is static
+            if event.type == pygame.MOUSEMOTION:
+                pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                posx = event.pos[0]
+                if turn == 0:
+                    pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
+                else:
+                    pygame.draw.circle(screen, YELLOW, (posx, int(SQUARESIZE/2)), RADIUS)
+            pygame.display.update()
 
-
-    # #Ask for Player 2 input
-    if turn == AI and not game_over:
-        #pygame.time.wait(500)
-        #col = random.randint(0, COLUMN_COUNT-1) #random walk peice placement
-        #col = pick_best_move(board, AI_PEICE) #score hueristic search
-        #col, minimax_score = minimax(board, 4, True)    #minimax solving algorithm
-        #col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
-        col = monte_carlo_tree_search(board, SIMULATIONS, AI_PEICE)
-        if is_valid_location(board,col):
-            row = get_next_open_row(board, col)
-            drop_piece(board, row, col, AI_PEICE)
-
-            if winning_move(board, AI_PEICE):
-                #print("\nPlayer 2 Wi2ns!!\n Here is the final board:\n ")
-                label = myfont.render("Player 2 WINS!!!", 1, YELLOW)
-                screen.blit(label, (40,10))
-                game_over = True
-
-
-            #print_board(board)
-            draw_board(board)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                #print_board(event.pos)
+                pygame.draw.rect(screen, BLACK, (0,0, width, SQUARESIZE))
+                            
+        # #Ask for player 1 input
+        if turn == PLAYER:
+            #note: add error check for 0-6
+            #posx = event.pos[0]
+            #col = int(math.floor(posx/SQUARESIZE))
+            col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
             
-            turn += 1
-            turn = turn % 2 #turn will alternate between 0 and 1
+            #col = int(input("Player 1 Make Your Selection (0-6): "))
+            if is_valid_location(board,col):
+                row = get_next_open_row(board, col)
+                drop_piece(board, row, col, PLAYER_PEICE)
 
-    if get_valid_locations(board) == None:
-        label = myfont.render("DRAW MATCH.", 1, BLUE)
-        screen.blit(label, (40,10))
+                if winning_move(board, PLAYER_PEICE):
+                    #print("\nPlayer 1 Wins!!\n Here is the final board:\n ")
+                    label = myfont.render("ALPHABETA WINS!!!", 1, RED)
+                    screen.blit(label, (40,10))
+                    game_over = True
+
+                #print_board(board)
+                draw_board(board)
                 
-        game_over = True
-    if game_over:
-        pygame.time.wait(3000)
+                turn += 1
+                turn = turn % 2 #turn will alternate between 0 and 1
+
+
+        # #Ask for Player 2 input
+        if turn == AI and not game_over:
+            #pygame.time.wait(500)
+            #col = random.randint(0, COLUMN_COUNT-1) #random walk peice placement
+            #col = pick_best_move(board, AI_PEICE) #score hueristic search
+            #col, minimax_score = minimax(board, 4, True)    #minimax solving algorithm
+            #col, minimax_score = alphaBeta(board, 4, -math.inf, math.inf, True)  #alphabeta solver
+            col = monte_carlo_tree_search(board, SIMULATIONS, AI_PEICE)
+            if is_valid_location(board,col):
+                row = get_next_open_row(board, col)
+                drop_piece(board, row, col, AI_PEICE)
+
+                if winning_move(board, AI_PEICE):
+                    #print("\nPlayer 2 Wi2ns!!\n Here is the final board:\n ")
+                    label = myfont.render("MONTE CARLO ts WINS!!!", 1, YELLOW)
+                    screen.blit(label, (40,10))
+                    game_over = True
+
+
+                #print_board(board)
+                draw_board(board)
+                
+                turn += 1
+                turn = turn % 2 #turn will alternate between 0 and 1
+
+        if get_valid_locations(board) == None:
+            label = myfont.render("DRAW MATCH.", 1, BLUE)
+            screen.blit(label, (40,10))
+                    
+            game_over = True
+        if game_over:
+            pygame.time.wait(3000)
